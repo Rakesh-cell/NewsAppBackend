@@ -9,54 +9,46 @@ const registerUser = async (req, res, next) => {
 
         const userExists = await User.findOne({ email: email });
 
-        if (userExists && userExists.active) {
+        if (userExists) {
             return res.status(400).json({
                 success: false,
                 msg: 'Entered email id is already registered with us. Login to continue'
             })
-        } else if (userExists && !userExists.active) {
-            return res.status(400).json({
-                success: false,
-                msg: 'Account created but need to activate , a link with you registered mobile number'
-            })
-        }
+        } 
         const user = new User({
             name, email, password
         })
-        //Generate 20 bit activation code, crypto is build in package of nodejs
-        crypto.randomBytes(20, function (err, buf) {
+        // errors from heroku: remove this  nodemailer part
+        // //Generate 20 bit activation code, crypto is build in package of nodejs
+        // crypto.randomBytes(20, function (err, buf) {
 
-            //Ensure the activation link is unique
-            user.activeToken = user._id + buf.toString('hex');
-            //Set exporation time is 24 hours
-            user.activeExpires = Date.now() + 24 * 3600 * 1000;
-            var link = process.env.NODE_ENV == 'development' ? `http://localhost:${process.env.PORT}/api/users/active/${user.activeToken}`
-                : `${process.abort.env.api_host}/api/users/${user.activeToken}`
+        //     //Ensure the activation link is unique
+        //     user.activeToken = user._id + buf.toString('hex');
+        //     //Set exporation time is 24 hours
+        //     user.activeExpires = Date.now() + 24 * 3600 * 1000;
+        //     var link = process.env.NODE_ENV == 'development' ? `http://localhost:${process.env.PORT}/api/users/active/${user.activeToken}`
+        //         : `${process.abort.env.api_host}/api/users/${user.activeToken}`
 
-            //Sending activation mail
-            mailer.send({
-                to: req.body.email,
-                subject: 'Welcome',
-                html: 'Please Click <a href="' + link + '"> here</a> to activate your account.'
-            })
-
-            // Save user object 
-            // user.save(function(err, user) {
-            //     console.log("save user",err,user)
-            //     if(err) return next(err)
-            //     res.status(201).json({
-            //         success: true,
-            //         msg:'The activation link has been sent  to ' + user.email + ', please click the activation link'
-            //     })
-            // })
+        //     //Sending activation mail
+        //     mailer.send({
+        //         to: req.body.email,
+        //         subject: 'Welcome',
+        //         html: 'Please Click <a href="' + link + '"> here</a> to activate your account.'
+        //     })
+       
             try {
                 user.save()
+                res.status(201).json({
+                    success: true,
+                    msg:'Account Created Successfully,Please Log in'
+                })
             }
             catch (err) {
                 next(err)
             }
+             // })
 
-        })
+        
 
 
     } catch (error) {
@@ -69,47 +61,47 @@ const registerUser = async (req, res, next) => {
 
 }
 
-const activeToken = async (req, res, next) => {
-    //find the corresponding user
-    const userActive = await User.findOne({
-        activeToken: req.params.activeToken,
-        // activeExpires: { $gt: Date.now() }
-    })
-    console.log("userActive", userActive);
-    try {
-        //If invalid activation code
-        if (!userActive) {
-            return res.status(400).json({
-                message: false,
-                msg: "Your activation link is invalid"
-            });
-        }
-        else if (userActive.active == true) {
-            return res.status(200).json({
-                success: true,
-                msg: "your account already activated go and login to use this app"
-            });
+// const activeToken = async (req, res, next) => {
+//     //find the corresponding user
+//     const userActive = await User.findOne({
+//         activeToken: req.params.activeToken,
+//         // activeExpires: { $gt: Date.now() }
+//     })
+//     console.log("userActive", userActive);
+//     try {
+//         //If invalid activation code
+//         if (!userActive) {
+//             return res.status(400).json({
+//                 message: false,
+//                 msg: "Your activation link is invalid"
+//             });
+//         }
+//         else if (userActive.active == true) {
+//             return res.status(200).json({
+//                 success: true,
+//                 msg: "your account already activated go and login to use this app"
+//             });
 
-        }
-        // If not activated activate and save
-        userActive.active = true;
-        console.log("after", userActive);
-        try {
-            userActive.save();
-        } catch (err) {
-            next(err)
-        }
-        res.json({
-            success: true,
-            msg: 'Activation Success'
-        })
+//         }
+//         // If not activated activate and save
+//         userActive.active = true;
+//         console.log("after", userActive);
+//         try {
+//             userActive.save();
+//         } catch (err) {
+//             next(err)
+//         }
+//         res.json({
+//             success: true,
+//             msg: 'Activation Success'
+//         })
 
-    } catch (err) {
-        next(err)
-    }
+//     } catch (err) {
+//         next(err)
+//     }
 
 
-}
+// }
 
 const authUser=async(req, res, next) => {
     const {email, password}=req.body;
@@ -177,7 +169,6 @@ const updateUserProfile = async(req, res,) => {
 
 module.exports = {
     registerUser,
-    activeToken,
     authUser,
     getUserProfile,
     updateUserProfile
