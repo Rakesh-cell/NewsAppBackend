@@ -1,7 +1,8 @@
 const express= require('express');
 const morgan= require('morgan');
 const connectDB=require('./config/db')
-const userRoutes= require('./routes/userRoute')
+const userRoute= require('./routes/userRoute')
+const categoryRoute=require('./routes/categoryRoute')
 require('dotenv').config();
 require('colors');
 
@@ -15,7 +16,8 @@ if(process.env.NODE_ENV === 'development')
 app.use(express.json());
 app.use(express.urlencoded({ extended:false}));
 
-app.use('/api/users',userRoutes);
+app.use('/api/users',userRoute);
+app.use('/api/category',categoryRoute);
 
 app.get('*', function(req, res) {
     // console.log(req.body);
