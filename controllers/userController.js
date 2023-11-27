@@ -40,7 +40,7 @@ const registerUser = async (req, res, next) => {
                 user.save()
                 res.status(201).json({
                     success: true,
-                    msg:'Account Created Successfully,Please Log in'
+                    msg:'Account Created Successfully, Please Log in'
                 })
             }
             catch (err) {
